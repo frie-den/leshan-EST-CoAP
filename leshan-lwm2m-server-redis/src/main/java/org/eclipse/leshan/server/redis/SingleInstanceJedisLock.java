@@ -17,7 +17,7 @@ package org.eclipse.leshan.server.redis;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.eclipse.leshan.core.util.Hex;
 import org.slf4j.Logger;
@@ -43,7 +43,6 @@ public class SingleInstanceJedisLock implements JedisLock {
     private static final int DEFAULT_RANDOM_SIZE = 10;
     private static final int DEFAULT_VALUE_SIZE = DEFAULT_RANDOM_SIZE + Long.SIZE / 8;
 
-    private final Random random = new Random();
     private final int expiration; // in ms
     private final long maxTime; // in ms
     private final long iterationTime; // in ms
@@ -84,7 +83,7 @@ public class SingleInstanceJedisLock implements JedisLock {
     public byte[] acquire(Jedis j, byte[] lockKey) throws IllegalStateException {
         long start = System.currentTimeMillis();
 
-        byte[] randomLockValue = generateLockValue(random, System.currentTimeMillis());
+        byte[] randomLockValue = generateLockValue(System.currentTimeMillis());
 
         while (!"OK".equals(j.set(lockKey, randomLockValue, SetParams.setParams().nx().px(expiration)))) {
             if (System.currentTimeMillis() - start > maxTime)
@@ -142,12 +141,12 @@ public class SingleInstanceJedisLock implements JedisLock {
         }
     }
 
-    protected byte[] generateLockValue(Random r, long timestamp) {
+    protected byte[] generateLockValue(long timestamp) {
         ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_VALUE_SIZE);
         buffer.putLong(timestamp);
 
         byte[] randomLockValue = new byte[DEFAULT_RANDOM_SIZE];
-        r.nextBytes(randomLockValue);
+        ThreadLocalRandom.current().nextBytes(randomLockValue); // NOSONAR: S2245 performance over crypto strength
         buffer.put(randomLockValue);
 
         return buffer.array();

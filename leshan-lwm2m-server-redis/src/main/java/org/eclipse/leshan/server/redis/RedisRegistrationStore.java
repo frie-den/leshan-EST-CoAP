@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -1049,39 +1050,33 @@ public class RedisRegistrationStore implements RegistrationStore, Startable, Sto
          * Throws {@link IllegalArgumentException} when any of prefixes is not set or is equal to some other.
          */
         public RedisRegistrationStore build() throws IllegalArgumentException {
-            if (this.registrationByEndpointPrefix == null || this.registrationByEndpointPrefix.isEmpty()) {
-                throw new IllegalArgumentException("registrationByEndpointPrefix should not be empty");
-            }
+            validatePrefixesNotEmpty();
+            validatePrefixesUniqueness();
+            applyGlobalPrefix();
+            generateDefaultValue();
 
-            if (this.endpointByRegistrationIdPrefix == null || this.endpointByRegistrationIdPrefix.isEmpty()) {
-                throw new IllegalArgumentException("endpointByRegistrationIdPrefix should not be empty");
-            }
+            return new RedisRegistrationStore(this);
+        }
 
-            if (this.endpointBySocketAddressPrefix == null || this.endpointBySocketAddressPrefix.isEmpty()) {
-                throw new IllegalArgumentException("endpointBySocketAddressPrefix should not be empty");
-            }
+        private void validatePrefixesNotEmpty() {
+            validatePrefixNotEmpty("registrationByEndpointPrefix", this.registrationByEndpointPrefix);
+            validatePrefixNotEmpty("endpointByRegistrationIdPrefix", this.endpointByRegistrationIdPrefix);
+            validatePrefixNotEmpty("endpointBySocketAddressPrefix", this.endpointBySocketAddressPrefix);
+            validatePrefixNotEmpty("endpointByIdentityPrefix", this.endpointByIdentityPrefix);
+            validatePrefixNotEmpty("endpointLockPrefix", this.endpointLockPrefix);
+            validatePrefixNotEmpty("observationByIdPrefix", this.observationByIdPrefix);
+            validatePrefixNotEmpty("observationIdsByRegistrationIdPrefix", this.observationIdsByRegistrationIdPrefix);
+            validatePrefixNotEmpty("endpointExpirationKey", this.endpointExpirationKey);
+        }
 
-            if (this.endpointByIdentityPrefix == null || this.endpointByIdentityPrefix.isEmpty()) {
-                throw new IllegalArgumentException("endpointByIdentityPrefix should not be empty");
+        private void validatePrefixNotEmpty(String prefixName, String prefixValue) {
+            Objects.requireNonNull(prefixName, "prefixName must not be null");
+            if (prefixValue == null || prefixValue.isEmpty()) {
+                throw new IllegalArgumentException(prefixName + " should not be empty");
             }
+        }
 
-            if (this.endpointLockPrefix == null || this.endpointLockPrefix.isEmpty()) {
-                throw new IllegalArgumentException("endpointLockPrefix should not be empty");
-            }
-
-            if (this.observationByIdPrefix == null || this.observationByIdPrefix.isEmpty()) {
-                throw new IllegalArgumentException("observationByIdPrefix should not be empty");
-            }
-
-            if (this.observationIdsByRegistrationIdPrefix == null
-                    || this.observationIdsByRegistrationIdPrefix.isEmpty()) {
-                throw new IllegalArgumentException("observationIdsByRegistrationIdPrefix should not be empty");
-            }
-
-            if (this.endpointExpirationKey == null || this.endpointExpirationKey.isEmpty()) {
-                throw new IllegalArgumentException("endpointExpirationKey should not be empty");
-            }
-
+        private void validatePrefixesUniqueness() {
             // Make sure same prefix is not used more than once
             String[] prefixes = new String[] { this.registrationByEndpointPrefix, this.endpointByRegistrationIdPrefix,
                     this.endpointBySocketAddressPrefix, this.endpointByIdentityPrefix, this.endpointLockPrefix,
@@ -1093,7 +1088,9 @@ public class RedisRegistrationStore implements RegistrationStore, Startable, Sto
                     throw new IllegalArgumentException(String.format("prefix name %s is taken already", p));
                 }
             }
+        }
 
+        private void applyGlobalPrefix() {
             if (this.prefix != null) {
                 this.registrationByEndpointPrefix = this.prefix + this.registrationByEndpointPrefix;
                 this.endpointByRegistrationIdPrefix = this.prefix + this.endpointByRegistrationIdPrefix;
@@ -1104,10 +1101,6 @@ public class RedisRegistrationStore implements RegistrationStore, Startable, Sto
                 this.observationIdsByRegistrationIdPrefix = this.prefix + this.observationIdsByRegistrationIdPrefix;
                 this.endpointExpirationKey = this.prefix + this.endpointExpirationKey;
             }
-
-            generateDefaultValue();
-
-            return new RedisRegistrationStore(this);
         }
     }
 }
