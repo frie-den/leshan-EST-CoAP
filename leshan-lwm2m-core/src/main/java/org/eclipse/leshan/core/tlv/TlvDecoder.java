@@ -17,7 +17,6 @@ package org.eclipse.leshan.core.tlv;
 
 import java.math.BigInteger;
 import java.nio.Buffer;
-import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -150,7 +149,7 @@ public class TlvDecoder {
             byte[] payload = new byte[length];
             input.get(payload);
             return payload;
-        } catch (BufferOverflowException e) {
+        } catch (BufferUnderflowException e) {
             throw new TlvException("Invalid 'value' length", e);
         }
     }

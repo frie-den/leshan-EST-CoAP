@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -86,5 +87,18 @@ class TlvDecoderTest {
                 () -> TlvDecoder.decodeObjlnk(new byte[] { 1, 2, 3 }));
         assertEquals("Invalid length for an object link value, 4 bytes array expected but get 3 bytes",
                 exception.getMessage());
+    }
+
+    @Test
+    void decode_tlv_with_truncated_value_throws_tlv_exception() {
+        // Type=0xC8: resource with value,
+        // ID=0x00,
+        // declared length=0xC8 (200), but no value bytes follow
+        String dataStr = "C800C8";
+        ByteBuffer b = ByteBuffer.wrap(Hex.decodeHex(dataStr.toCharArray()));
+
+        TlvException exception = assertThrows(TlvException.class, () -> TlvDecoder.decode(b));
+        assertEquals("Invalid 'value' length", exception.getCause().getMessage());
+        assertTrue(exception.getCause().getCause() instanceof BufferUnderflowException);
     }
 }
