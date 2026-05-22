@@ -31,12 +31,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Unit test for {@link TlvDecoder}
  */
-public class TlvDecoderTest {
+class TlvDecoderTest {
 
-    private static Logger LOG = LoggerFactory.getLogger(TlvDecoderTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TlvDecoderTest.class);
 
     @Test
-    public void decode_device_object() throws TlvException {
+    void decode_device_object() throws TlvException {
         // // the /3// from liwblwm2m
         String dataStr = "C800144F70656E204D6F62696C6520416C6C69616E6365C801164C69676874776569676874204D324D20436C69656E74C80209333435303030313233C303312E30860641000141010588070842000ED842011388870841007D42010384C10964C10A0F830B410000C40D5182428FC60E2B30323A3030C10F55";
         byte[] bytes = Hex.decodeHex(dataStr.toCharArray());
@@ -49,7 +49,7 @@ public class TlvDecoderTest {
     }
 
     @Test
-    public void decode_broken_tlv() throws TlvException {
+    void decode_broken_tlv() throws TlvException {
         String dataStr = "0011223344556677889900";
         byte[] bytes = Hex.decodeHex(dataStr.toCharArray());
         ByteBuffer b = ByteBuffer.wrap(bytes);
@@ -65,7 +65,7 @@ public class TlvDecoderTest {
     }
 
     @Test
-    public void decode_object_link() throws TlvException {
+    void decode_object_link() throws TlvException {
         String dataStr = "12345678";
         byte[] bytes = Hex.decodeHex(dataStr.toCharArray());
         ObjectLink objlnk = TlvDecoder.decodeObjlnk(bytes);
