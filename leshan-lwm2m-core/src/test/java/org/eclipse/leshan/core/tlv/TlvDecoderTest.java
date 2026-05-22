@@ -16,9 +16,9 @@
 package org.eclipse.leshan.core.tlv;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -51,19 +51,29 @@ class TlvDecoderTest {
     }
 
     @Test
-    void decode_broken_tlv() throws TlvException {
+    void decode_broken_tlv() {
         String dataStr = "0011223344556677889900";
         byte[] bytes = Hex.decodeHex(dataStr.toCharArray());
         ByteBuffer b = ByteBuffer.wrap(bytes);
 
-        try {
-            TlvDecoder.decode(b);
-            fail();
-        } catch (TlvException ex) {
-            // this is very weak assertion since the format of the exception's message could
-            // be changed any time
-            assertEquals("Impossible to parse TLV: \n0011223344556677889900", ex.getMessage());
-        }
+        TlvException exception = assertThrows(TlvException.class, () -> TlvDecoder.decode(b));
+        // this is very weak assertion since the format of the exception's message could
+        // be changed any time
+        assertEquals("Impossible to parse TLV: buffer state position=5, remaining=6, limit=11", exception.getMessage());
+        assertFalse(exception.getMessage().contains(dataStr));
+    }
+
+    @Test
+    void decode_broken_tlv_from_direct_byte_buffer() {
+        String dataStr = "0011223344556677889900";
+        byte[] bytes = Hex.decodeHex(dataStr.toCharArray());
+        ByteBuffer b = ByteBuffer.allocateDirect(bytes.length);
+        b.put(bytes);
+        b.flip();
+
+        TlvException exception = assertThrows(TlvException.class, () -> TlvDecoder.decode(b));
+        assertEquals("Impossible to parse TLV: buffer state position=5, remaining=6, limit=11", exception.getMessage());
+        assertFalse(exception.getMessage().contains(dataStr));
     }
 
     @Test

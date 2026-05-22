@@ -76,12 +76,29 @@ public class TlvDecoder {
 
             return tlvs.toArray(new Tlv[] {});
         } catch (TlvException ex) {
-            String printHexBinary = Hex.encodeHexString(input.array());
-            throw new TlvException("Impossible to parse TLV: \n" + printHexBinary, ex);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Impossible to parse TLV: {}", getBufferHex(input), ex);
+            }
+            throw new TlvException("Impossible to parse TLV: " + getBufferState(input), ex);
         } catch (RuntimeException ex) {
-            String printHexBinary = Hex.encodeHexString(input.array());
-            throw new TlvException("Unexpected TLV parse error: \n" + printHexBinary, ex);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Unexpected TLV parse error: {}", getBufferHex(input), ex);
+            }
+            throw new TlvException("Unexpected TLV parse error: " + getBufferState(input), ex);
         }
+    }
+
+    private static String getBufferState(ByteBuffer input) {
+        return String.format("buffer state position=%d, remaining=%d, limit=%d", input.position(), input.remaining(),
+                input.limit());
+    }
+
+    private static String getBufferHex(ByteBuffer input) {
+        ByteBuffer copy = input.duplicate();
+        copy.position(0);
+        byte[] bytes = new byte[copy.limit()];
+        copy.get(bytes);
+        return Hex.encodeHexString(bytes);
     }
 
     private static TlvType consumeType(int typeByte) throws TlvException {
