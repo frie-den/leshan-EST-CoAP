@@ -36,6 +36,10 @@ public class TlvDecoder {
 
     private static final Logger LOG = LoggerFactory.getLogger(TlvDecoder.class);
 
+    private TlvDecoder() {
+        // this is an utility static class
+    }
+
     public static Tlv[] decode(ByteBuffer input) throws TlvException {
 
         try {
@@ -46,101 +50,28 @@ public class TlvDecoder {
 
                 // decode type
                 int typeByte = input.get() & 0xFF;
-                TlvType type;
-                switch (typeByte & 0b1100_0000) {
-                case 0b0000_0000:
-                    type = TlvType.OBJECT_INSTANCE;
-                    break;
-                case 0b0100_0000:
-                    type = TlvType.RESOURCE_INSTANCE;
-                    break;
-                case 0b1000_0000:
-                    type = TlvType.MULTIPLE_RESOURCE;
-                    break;
-                case 0b1100_0000:
-                    type = TlvType.RESOURCE_VALUE;
-                    break;
-                default:
-                    throw new TlvException("unknown type: " + (typeByte & 0b1100_0000));
-                }
+                TlvType type = consumeType(typeByte);
 
                 // decode identifier
-                int identifier;
-                try {
-                    if ((typeByte & 0b0010_0000) == 0) {
-                        identifier = input.get() & 0xFF;
-                    } else {
-                        identifier = input.getShort() & 0xFFFF;
-                    }
-                } catch (BufferUnderflowException e) {
-                    throw new TlvException("Invalid 'identifier' length", e);
-                }
+                int identifier = consumeIdentifier(input, typeByte);
                 LOG.trace("decoding {} {}", type, identifier);
 
                 // decode length
-                int length;
                 int lengthType = typeByte & 0b0001_1000;
-                try {
-                    switch (lengthType) {
-                    case 0b0000_0000:
-                        // 2 bit length
-                        length = typeByte & 0b0000_0111;
-                        break;
-                    case 0b0000_1000:
-                        // 8 bit length
-                        length = input.get() & 0xFF;
-                        break;
-                    case 0b0001_0000:
-                        // 16 bit length
-                        length = input.getShort() & 0xFFFF;
-                        break;
-                    case 0b0001_1000:
-                        // 24 bit length
-                        int b = input.get() & 0x000000FF;
-                        int s = input.getShort() & 0x0000FFFF;
-                        length = (b << 16) | s;
-                        break;
-                    default:
-                        throw new TlvException("unknown length type: " + (typeByte & 0b0001_1000));
-                    }
-                } catch (BufferUnderflowException e) {
-                    throw new TlvException("Invalid 'length' length", e);
-                }
+                int length = consumeLength(input, lengthType, typeByte);
                 LOG.trace("length: {} (length type: {})", length, lengthType);
 
                 // decode value
                 if (type == TlvType.RESOURCE_VALUE || type == TlvType.RESOURCE_INSTANCE) {
-                    try {
-                        byte[] payload = new byte[length];
-                        input.get(payload);
-                        tlvs.add(new Tlv(type, null, payload, identifier));
-
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("payload value: {}", Hex.encodeHexString(payload));
-                        }
-                    } catch (BufferOverflowException e) {
-                        throw new TlvException("Invalid 'value' length", e);
+                    byte[] payload = consumeValue(input, length);
+                    tlvs.add(new Tlv(type, null, payload, identifier));
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("payload value: {}", Hex.encodeHexString(payload));
                     }
                 } else {
-                    try {
-                        // create a view of the contained TLVs
-                        ByteBuffer slice = input.slice();
-                        // HACK the cast is necessary for binary backward compatibility bug introduce in Java 9
-                        // https://github.com/apache/felix/pull/114
-                        ((Buffer) slice).limit(length);
-
-                        Tlv[] children = decode(slice);
-
-                        // skip the children, it will be decoded by the view
-                        // HACK the cast is necessary for binary backward compatibility bug introduce in Java 9
-                        // https://github.com/apache/felix/pull/114
-                        ((Buffer) input).position(((Buffer) input).position() + length);
-
-                        Tlv tlv = new Tlv(type, children, null, identifier);
-                        tlvs.add(tlv);
-                    } catch (IllegalArgumentException e) {
-                        throw new TlvException("Invalid 'value' length", e);
-                    }
+                    Tlv[] children = consumeChildren(input, length);
+                    Tlv tlv = new Tlv(type, children, null, identifier);
+                    tlvs.add(tlv);
                 }
             }
 
@@ -152,6 +83,94 @@ public class TlvDecoder {
             String printHexBinary = Hex.encodeHexString(input.array());
             throw new TlvException("Unexpected TLV parse error: \n" + printHexBinary, ex);
         }
+    }
+
+    private static TlvType consumeType(int typeByte) throws TlvException {
+        TlvType type;
+        switch (typeByte & 0b1100_0000) {
+        case 0b0000_0000:
+            type = TlvType.OBJECT_INSTANCE;
+            break;
+        case 0b0100_0000:
+            type = TlvType.RESOURCE_INSTANCE;
+            break;
+        case 0b1000_0000:
+            type = TlvType.MULTIPLE_RESOURCE;
+            break;
+        case 0b1100_0000:
+            type = TlvType.RESOURCE_VALUE;
+            break;
+        default:
+            throw new TlvException("unknown type: " + (typeByte & 0b1100_0000));
+        }
+        return type;
+    }
+
+    private static int consumeIdentifier(ByteBuffer input, int typeByte) throws TlvException {
+        int identifier;
+        try {
+            if ((typeByte & 0b0010_0000) == 0) {
+                identifier = input.get() & 0xFF;
+            } else {
+                identifier = input.getShort() & 0xFFFF;
+            }
+        } catch (BufferUnderflowException e) {
+            throw new TlvException("Invalid 'identifier' length", e);
+        }
+        return identifier;
+    }
+
+    private static int consumeLength(ByteBuffer input, int lengthType, int typeByte) throws TlvException {
+        try {
+            switch (lengthType) {
+            case 0b0000_0000:
+                // 2 bit length
+                return typeByte & 0b0000_0111;
+            case 0b0000_1000:
+                // 8 bit length
+                return input.get() & 0xFF;
+            case 0b0001_0000:
+                // 16 bit length
+                return input.getShort() & 0xFFFF;
+            case 0b0001_1000:
+                // 24 bit length
+                int b = input.get() & 0x000000FF;
+                int s = input.getShort() & 0x0000FFFF;
+                return (b << 16) | s;
+            default:
+                throw new TlvException("unknown length type: " + (typeByte & 0b0001_1000));
+            }
+        } catch (BufferUnderflowException e) {
+            throw new TlvException("Invalid 'length' length", e);
+        }
+    }
+
+    private static byte[] consumeValue(ByteBuffer input, int length) throws TlvException {
+        try {
+            byte[] payload = new byte[length];
+            input.get(payload);
+            return payload;
+        } catch (BufferOverflowException e) {
+            throw new TlvException("Invalid 'value' length", e);
+        }
+    }
+
+    @SuppressWarnings("java:S1905")
+    private static Tlv[] consumeChildren(ByteBuffer input, int length) throws TlvException {
+        // create a view of the contained TLVs
+        ByteBuffer slice = input.slice();
+        // HACK the cast is necessary for binary backward compatibility bug introduce in Java 9
+        // https://github.com/apache/felix/pull/114
+        ((Buffer) slice).limit(length);
+
+        Tlv[] children = decode(slice);
+
+        // skip the children, it will be decoded by the view
+        // HACK the cast is necessary for binary backward compatibility bug introduce in Java 9
+        // https://github.com/apache/felix/pull/114
+        ((Buffer) input).position(input.position() + length);
+
+        return children;
     }
 
     /**
