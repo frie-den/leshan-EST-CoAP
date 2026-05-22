@@ -213,6 +213,10 @@ public class TlvDecoder {
      * Decodes a byte array into a objlnk value.
      */
     public static ObjectLink decodeObjlnk(byte[] value) throws TlvException {
+        if (value.length != 4) {
+            throw new TlvException("Invalid length for an object link value, 4 bytes array expected but get "
+                    + value.length + " bytes");
+        }
         ByteBuffer bff = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN);
         bff.put(value);
         int val1 = bff.getShort(0) & 0xFFFF;

@@ -16,6 +16,7 @@
 package org.eclipse.leshan.core.tlv;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -77,5 +78,13 @@ class TlvDecoderTest {
         objlnk = TlvDecoder.decodeObjlnk(bytes);
         assertEquals(0xffff, objlnk.getObjectId());
         assertEquals(0xffff, objlnk.getObjectInstanceId());
+    }
+
+    @Test
+    void decode_object_link_reject_invalid_length() {
+        TlvException exception = assertThrows(TlvException.class,
+                () -> TlvDecoder.decodeObjlnk(new byte[] { 1, 2, 3 }));
+        assertEquals("Invalid length for an object link value, 4 bytes array expected but get 3 bytes",
+                exception.getMessage());
     }
 }
