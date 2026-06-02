@@ -409,7 +409,7 @@ Contributors:
       <dependency>
         <groupId>nl.jqno.equalsverifier</groupId>
         <artifactId>equalsverifier</artifactId>
-        <version>3.15.3</version>
+        <version>4.5</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
