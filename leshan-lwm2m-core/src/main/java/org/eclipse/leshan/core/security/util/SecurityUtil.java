@@ -16,10 +16,9 @@
 package org.eclipse.leshan.core.security.util;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -32,11 +31,15 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.leshan.core.credentials.CredentialsReader;
 
 public class SecurityUtil {
+
+    private static final byte[] PEM_CERTIFICATE_HEARDER = "-----BEGIN CERTIFICATE-----"
+            .getBytes(StandardCharsets.US_ASCII);
 
     private SecurityUtil() {
     }
@@ -59,7 +62,18 @@ public class SecurityUtil {
         }
     };
 
+    /**
+     * Reader for DER encoded Certificate. It should raise {@link CertificateException} is junk data are present before
+     * or after certificate data.
+     */
     public static final CredentialsReader<X509Certificate> derCertificate = new CredentialsReader<X509Certificate>() {
+
+        /**
+         * Decode exactly one credential from the stream, leaving it positioned right after, so the caller can keep
+         * reading what follows (another credential, a key, application data, ...).
+         * <p>
+         * Junk <em>before</em> the credential is still rejected.
+         */
         @Override
         public X509Certificate decode(BufferedInputStream inputStream) throws CertificateException {
             assertDerEncoding(inputStream);
@@ -67,68 +81,128 @@ public class SecurityUtil {
         }
     };
 
+    /**
+     * Reader for PEM encoded Certificate. It should raise {@link CertificateException} is junk data are present before
+     * or after certificate data.
+     */
     public static final CredentialsReader<X509Certificate> pemCertificate = new CredentialsReader<X509Certificate>() {
+
+        /**
+         * Decode exactly one credential from the stream, leaving it positioned right after, so the caller can keep
+         * reading what follows (another credential, a key, application data, ...).
+         * <p>
+         * Junk <em>before</em> the credential is still rejected.
+         */
         @Override
         public X509Certificate decode(BufferedInputStream inputStream) throws CertificateException {
-            assertPemEncoding(inputStream);
+            assertPemCertificateEncoding(inputStream);
             return readCertificate(inputStream);
         }
     };
 
+    /**
+     * Reader for PEM or DER encoded Certificate. It should raise {@link CertificateException} is junk data are present
+     * before or after certificate data.
+     */
     public static final CredentialsReader<X509Certificate> certificate = new CredentialsReader<X509Certificate>() {
+
+        /**
+         * Decode exactly one credential from the stream, leaving it positioned right after, so the caller can keep
+         * reading what follows (another credential, a key, application data, ...).
+         * <p>
+         * Junk <em>before</em> the credential is still rejected.
+         */
         @Override
         public X509Certificate decode(BufferedInputStream inputStream) throws CertificateException {
+            assertDerOrPemCertificateEncoding(inputStream);
             return readCertificate(inputStream);
         }
     };
 
+    /**
+     * Reader for PEM or DER encoded Certificates chain. It should raise {@link CertificateException} is junk data are
+     * present before, between or after certificate data.
+     */
     public static final CredentialsReader<X509Certificate[]> certificateChain = new CredentialsReader<X509Certificate[]>() {
+
+        /**
+         * Decode exactly certificate chain from the stream, leaving it positioned right after, so the caller can keep
+         * reading what follows (another credential, a key, application data, ...).
+         * <p>
+         * Junk <em>before</em> or <em>between</em> the credential is still rejected.
+         */
         @Override
         public X509Certificate[] decode(BufferedInputStream inputStream) throws CertificateException {
-            try {
-
-                List<X509Certificate> chain = new ArrayList<>();
-                X509Certificate cert;
-                while (inputStream.available() != 0) {
-                    cert = readCertificate(inputStream);
-                    chain.add(cert);
+            List<X509Certificate> chain = new ArrayList<>();
+            X509Certificate cert;
+            Encoding chainEncoding = null;
+            do {
+                Encoding certificateEncoding = getEncoding(inputStream);
+                if (certificateEncoding != Encoding.PEM && certificateEncoding != Encoding.DER) {
+                    // there is no more certificate to read
+                    break;
                 }
-                return chain.toArray(new X509Certificate[chain.size()]);
-            } catch (IOException e) {
-                throw new CertificateException("Unexpected IOException while loading certificate chain", e);
+                if (chainEncoding == null) {
+                    chainEncoding = certificateEncoding;
+                } else if (chainEncoding != certificateEncoding) {
+                    throw new CertificateException(
+                            "certificate chain should not contain mix of PEM and DER encoding certificates");
+                }
+                cert = readCertificate(inputStream);
+                chain.add(cert);
+            } while (true);
+
+            // We must at least read one certificate.
+            if (chain.isEmpty()) {
+                throw new CertificateException(
+                        "Certificate chain should contain at leat one PEM or DER encoding certificate and no junk data is expected before that certificate");
             }
+            return chain.toArray(new X509Certificate[chain.size()]);
         }
     };
 
-    private static void assertDerEncoding(BufferedInputStream bis) throws CertificateException {
+    private static boolean isDerEncoding(BufferedInputStream bis) throws CertificateException {
         try {
-            bis.mark(10); // mark position with read limit (10 bytes is enough to peek at DER)
+            bis.mark(1);
             int firstByte = bis.read();
             boolean foundDerStart = firstByte == 0x30; // ASN.1 SEQUENCE tag
             bis.reset(); // rewind back to beginning
-
-            if (!foundDerStart) {
-                throw new CertificateException("The certificate is not DER-encoded. Only DER format is supported.");
-            }
+            return foundDerStart;
         } catch (IOException e) {
             throw new CertificateException("Unexpected IOException while checking if certificate is DER encoded", e);
         }
     }
 
-    private static void assertPemEncoding(BufferedInputStream bis) throws CertificateException {
+    private static void assertDerEncoding(BufferedInputStream bis) throws CertificateException {
+        if (!isDerEncoding(bis)) {
+            throw new CertificateException("The certificate is not DER-encoded. Only DER format is supported.");
+        }
+    }
+
+    private static boolean isPemCertificateEncoding(BufferedInputStream bis) throws CertificateException {
         try {
-            bis.mark(1024); // enough to scan first few lines
-            BufferedReader reader = new BufferedReader(new InputStreamReader(bis));
-
-            String firstLine = reader.readLine();
-            boolean foundPemStart = firstLine != null && firstLine.contains("-----BEGIN CERTIFICATE-----");
-            bis.reset(); // rewind for actual parsing
-
-            if (!foundPemStart) {
-                throw new CertificateException("The certificate is not PEM-encoded. Only PEM format is supported.");
-            }
+            bis.mark(PEM_CERTIFICATE_HEARDER.length);
+            byte[] head = new byte[PEM_CERTIFICATE_HEARDER.length];
+            int nbBytesRead = readNBytes(bis, head, 0, head.length);
+            bis.reset();
+            if (nbBytesRead != PEM_CERTIFICATE_HEARDER.length)
+                return false;
+            return Arrays.equals(head, PEM_CERTIFICATE_HEARDER);
         } catch (IOException e) {
             throw new CertificateException("Unexpected IOException while checking if certificate is PEM encoded", e);
+        }
+    }
+
+    private static void assertPemCertificateEncoding(BufferedInputStream bis) throws CertificateException {
+        if (!isPemCertificateEncoding(bis)) {
+            throw new CertificateException("The certificate is not PEM-encoded. Only PEM format is supported.");
+        }
+    }
+
+    private static void assertDerOrPemCertificateEncoding(BufferedInputStream bis) throws CertificateException {
+        if (!isDerEncoding(bis) && !isPemCertificateEncoding(bis)) {
+            throw new CertificateException(
+                    "The certificate is neither PEM or DER encoded. Only PEM and DER are supported.");
         }
     }
 
@@ -153,4 +227,28 @@ public class SecurityUtil {
         }
     }
 
+    private enum Encoding {
+        DER, PEM, UNKNOWN;
+    }
+
+    private static Encoding getEncoding(BufferedInputStream bis) throws CertificateException {
+        if (isDerEncoding(bis)) {
+            return Encoding.DER;
+        }
+        if (isPemCertificateEncoding(bis)) {
+            return Encoding.PEM;
+        }
+        return Encoding.UNKNOWN;
+    }
+
+    private static int readNBytes(InputStream in, byte[] b, int off, int len) throws IOException {
+        int n = 0;
+        while (n < len) {
+            int count = in.read(b, off + n, len - n);
+            if (count < 0)
+                break;
+            n += count;
+        }
+        return n;
+    }
 }

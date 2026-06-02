@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.security.GeneralSecurityException;
+import java.security.cert.CertificateException;
 
 /**
  * An helper class to read credentials from various input. <br>
@@ -47,11 +48,7 @@ public abstract class CredentialsReader<T> {
     public T readFromResource(String resourcePath) throws IOException, GeneralSecurityException {
         try (BufferedInputStream in = new BufferedInputStream(ClassLoader.getSystemResourceAsStream(resourcePath))) {
             T decodedValue = decode(in);
-
-            if (in.available() != 0) {
-                throw new GeneralSecurityException(
-                        String.format("%d unexpected bytes at the end of the file", in.available()));
-            }
+            assertNothingMore(in);
             return decodedValue;
         }
     }
@@ -62,11 +59,7 @@ public abstract class CredentialsReader<T> {
     public T decode(byte[] bytes) throws IOException, GeneralSecurityException {
         try (BufferedInputStream in = new BufferedInputStream(new ByteArrayInputStream(bytes))) {
             T decodedValue = decode(in);
-
-            if (in.available() != 0) {
-                throw new GeneralSecurityException(
-                        String.format("%d unexpected bytes at the end of the array", in.available()));
-            }
+            assertNothingMore(in);
             return decodedValue;
         }
     }
@@ -84,6 +77,24 @@ public abstract class CredentialsReader<T> {
             buffer.flush();
 
             return decode(buffer.toByteArray());
+        }
+    }
+
+    protected boolean isEOF(BufferedInputStream bis) throws CertificateException {
+        try {
+            bis.mark(1);
+            int nextByte = bis.read();
+            boolean noMoreByeToRead = nextByte == -1;
+            bis.reset(); // rewind back to beginning
+            return noMoreByeToRead;
+        } catch (IOException e) {
+            throw new CertificateException("Unexpected IOException while checking if we reach EOF of given stream", e);
+        }
+    }
+
+    protected void assertNothingMore(BufferedInputStream bis) throws CertificateException {
+        if (!isEOF(bis)) {
+            throw new CertificateException("There is unexpected data at the end of the stream.");
         }
     }
 }
