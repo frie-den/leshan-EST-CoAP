@@ -37,6 +37,7 @@ pipeline {
         sh '''mvn -B test -PuseToolchain  -Dskip.npm -Dtoolchain.version=11'''
         sh '''mvn -B test -PuseToolchain  -Dskip.npm -Dtoolchain.version=17'''
         sh '''mvn -B test -PuseToolchain  -Dskip.npm -Dtoolchain.version=21'''
+        sh '''mvn -B test -PuseToolchain  -Dskip.npm -Dtoolchain.version=25'''
       }
     }
     stage('Deploy') {
