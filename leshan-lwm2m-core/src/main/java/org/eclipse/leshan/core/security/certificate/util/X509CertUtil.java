@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class X509CertUtil {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CertPathUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(X509CertUtil.class);
 
     /**
      * OID for server authentication in extended key.
@@ -303,7 +303,7 @@ public class X509CertUtil {
      * @return Map with field keys and their values
      */
     public static Map<String, String> parseRfc2253Name(String name) {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
 
         // Parse RFC 2253 string
         boolean inValue = false;
@@ -372,7 +372,7 @@ public class X509CertUtil {
             // list in RFC is only example OIDs list (see JDK class AVAKeyword). These extra OID's are
             // actually defined in Sun packages but we should not access them as they are not standard
             // Java classes.
-            HashMap<String, String> extraOids = new HashMap<String, String>();
+            HashMap<String, String> extraOids = new HashMap<>();
             extraOids.put("2.5.4.5", "SERIALNUMBER");
 
             String dn = x500Principal.getName(X500Principal.RFC2253, extraOids);
