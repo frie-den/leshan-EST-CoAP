@@ -147,6 +147,7 @@ class X509CertUtilTest {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("server_with_san");
 
         assertTrue(X509CertUtil.matchSubjectDnsName(certificate, "server.mydomain.com"));
+        assertTrue(X509CertUtil.matchSubjectDnsName(certificate, "SERVER.MyDomain.com"));
         assertFalse(X509CertUtil.matchSubjectDnsName(certificate, "another.domain.com"));
         assertFalse(X509CertUtil.matchSubjectDnsName(certificate, "localhost"));
     }

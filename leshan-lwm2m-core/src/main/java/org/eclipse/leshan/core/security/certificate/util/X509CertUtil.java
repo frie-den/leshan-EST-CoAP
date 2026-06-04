@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -396,7 +397,11 @@ public class X509CertUtil {
      * @param target Target DNS name to check
      * @return true if matches, false otherwise
      */
-    private static boolean dnsNameMatch(String matcher, String target) {
+    public static boolean dnsNameMatch(String matcher, String target) {
+        // DNS matching is case-insensitive : https://www.rfc-editor.org/info/rfc6125/#section-6.4.1
+        matcher = matcher.toLowerCase(Locale.ROOT);
+        target = target.toLowerCase(Locale.ROOT);
+
         if (matcher.startsWith("*.")) {
             // Simple filtering out
             if (!target.endsWith(matcher.substring(1)))
