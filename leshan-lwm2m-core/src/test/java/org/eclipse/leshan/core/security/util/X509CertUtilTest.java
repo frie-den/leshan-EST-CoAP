@@ -36,7 +36,7 @@ import javax.security.auth.x500.X500Principal;
 import org.eclipse.leshan.core.security.certificate.util.X509CertUtil;
 import org.junit.jupiter.api.Test;
 
-public class X509CertUtilTest {
+class X509CertUtilTest {
 
     private final KeyStore keyStore;
 
@@ -75,13 +75,13 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void principal_simple_cn() {
+    void principal_simple_cn() {
         X500Principal simple = new X500Principal("CN=simple");
         assertEquals("simple", X509CertUtil.getPrincipalField(simple, "CN"));
     }
 
     @Test
-    public void principal_devurn_cn() {
+    void principal_devurn_cn() {
         X500Principal dn = new X500Principal("CN=urn:dev:ops:32473-Refrigerator-5002,O=Organization,C=US");
         assertEquals("urn:dev:ops:32473-Refrigerator-5002", X509CertUtil.getPrincipalField(dn, "CN"));
         assertEquals("Organization", X509CertUtil.getPrincipalField(dn, "O"));
@@ -89,7 +89,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void principal_ieee802_1ar() {
+    void principal_ieee802_1ar() {
         X500Principal dn = new X500Principal("SERIALNUMBER=P123456,CN=MyDevice,O=Company,C=US");
         assertEquals("P123456", X509CertUtil.getPrincipalField(dn, "SERIALNUMBER"));
         assertEquals("MyDevice", X509CertUtil.getPrincipalField(dn, "CN"));
@@ -98,7 +98,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void principal_rfc2253_examples() {
+    void principal_rfc2253_examples() {
         X500Principal example1 = new X500Principal("CN=Steve Kille,O=Isode Limited,C=GB");
         assertEquals("Steve Kille", X509CertUtil.getPrincipalField(example1, "CN"));
         assertEquals("Isode Limited", X509CertUtil.getPrincipalField(example1, "O"));
@@ -134,7 +134,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_simple_dns_name_test() throws KeyStoreException {
+    void x509_simple_dns_name_test() throws KeyStoreException {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("server");
 
         assertTrue(X509CertUtil.matchSubjectDnsName(certificate, "server.mydomain.com"));
@@ -143,7 +143,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_san_dns_name_test() throws KeyStoreException {
+    void x509_san_dns_name_test() throws KeyStoreException {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("server_with_san");
 
         assertTrue(X509CertUtil.matchSubjectDnsName(certificate, "server.mydomain.com"));
@@ -152,7 +152,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_san_ipv4_test() throws KeyStoreException, UnknownHostException {
+    void x509_san_ipv4_test() throws KeyStoreException, UnknownHostException {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("server_with_san");
 
         assertTrue(X509CertUtil.matchSubjectInetAddress(certificate, InetAddress.getByName("192.168.1.42")));
@@ -164,7 +164,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_san_ipv6_test() throws KeyStoreException, UnknownHostException {
+    void x509_san_ipv6_test() throws KeyStoreException, UnknownHostException {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("server_with_ipv6");
 
         assertFalse(X509CertUtil.matchSubjectInetAddress(certificate, InetAddress.getByName("192.168.1.42")));
@@ -176,7 +176,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_san_combo_test() throws KeyStoreException, UnknownHostException {
+    void x509_san_combo_test() throws KeyStoreException, UnknownHostException {
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate("localhost");
 
         assertFalse(X509CertUtil.matchSubjectDnsName(certificate, "server.mydomain.com"));
@@ -192,7 +192,7 @@ public class X509CertUtilTest {
     }
 
     @Test
-    public void x509_san_wildcard_test() throws KeyStoreException, UnknownHostException {
+    void x509_san_wildcard_test() {
         X509Certificate certificate = loadX509PemCertificate("./certificates/eclipse.org.pem");
 
         assertTrue(X509CertUtil.matchSubjectDnsName(certificate, "eclipse.org"));
