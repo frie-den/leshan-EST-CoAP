@@ -403,13 +403,25 @@ public class X509CertUtil {
         target = target.toLowerCase(Locale.ROOT);
 
         if (matcher.startsWith("*.")) {
+            // See wildcard matching constraint :
+            // https://www.rfc-editor.org/info/rfc6125/#section-6.4.3
+            // https://www.rfc-editor.org/info/rfc6125/#section-7.2
+            // https://errata.rfc-editor.org/search/?rfc_number=6125&presentation=records
+
+            // Wildcard pattern must have at least 3 labels (*.foo.tld)
+            // to prevent over-broad wildcards like *.com
+            if (matcher.indexOf('.', 2) == -1)
+                return false;
+
             // Simple filtering out
             if (!target.endsWith(matcher.substring(1)))
                 return false;
 
-            // Wildcards only work in one sub level so no extra dots
+            // Wildcards only work in one sub level so no extra dots,
+            // and the leftmost label must be non-empty (RFC 6125: wildcard
+            // must match at least one character)
             String host = target.substring(0, target.length() - (matcher.length() - 1));
-            return host.indexOf('.') == -1;
+            return !host.isEmpty() && host.indexOf('.') == -1;
         }
         return matcher.equals(target);
     }
@@ -424,7 +436,6 @@ public class X509CertUtil {
     public static boolean matchSubjectDnsName(X509Certificate certificate, String dnsName) {
         try {
             // First one need to check SANs if they are present
-
             Collection<List<?>> sans = certificate.getSubjectAlternativeNames();
 
             if (sans != null) {
