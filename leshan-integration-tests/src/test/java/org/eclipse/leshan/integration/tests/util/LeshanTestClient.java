@@ -296,11 +296,11 @@ public class LeshanTestClient extends LeshanClient {
             InetSocketAddress endpointAddr = uriHandler.getSocketAddr(endpointURI);
             if (proxy != null && endpointAddr.equals(proxy.getServerAddress())) {
                 EndpointUri proxyUri = uriHandler.replaceAddress(endpointURI, proxy.getClientSideProxyAddress());
-                if (proxyUri.toString().equals(expectedUri)) {
+                if (uriHandler.isUriTargetSameSocket(proxyUri, uriHandler.getParser().parse(expectedUri))) {
                     return true;
                 }
             } else {
-                if (endpointURI.toString().equals(expectedUri)) {
+                if (uriHandler.isUriTargetSameSocket(endpointURI, uriHandler.getParser().parse(expectedUri))) {
                     return true;
                 }
             }

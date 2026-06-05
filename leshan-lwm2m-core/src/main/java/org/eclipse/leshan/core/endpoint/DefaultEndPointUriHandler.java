@@ -91,10 +91,16 @@ public class DefaultEndPointUriHandler implements EndPointUriHandler {
     protected static String toUriHostName(InetSocketAddress socketAddr) {
         Validate.notNull(socketAddr);
 
+        String host = socketAddr.getHostString();
+
+        // special case for Ipv6 socket address
         InetAddress addr = socketAddr.getAddress();
-        String host = addr.getHostAddress();
-        if (addr instanceof Inet6Address) {
+        if (addr instanceof Inet6Address
+                // check if getHostString return IP literal and not domain name.
+                && host.equals(addr.getHostAddress())) {
             Inet6Address address6 = (Inet6Address) addr;
+
+            // If this is IP literal about Ipv6 then format it correctly for URI format.
             if (address6.getScopedInterface() != null || address6.getScopeId() > 0) {
                 int pos = host.indexOf('%');
                 if (pos > 0 && pos + 1 < host.length()) {
@@ -107,5 +113,20 @@ public class DefaultEndPointUriHandler implements EndPointUriHandler {
             host = '[' + host + ']';
         }
         return host;
+    }
+
+    @Override
+    public boolean isUriTargetSameSocket(EndpointUri uri1, EndpointUri uri2) {
+        if (!(uri1.getScheme().equals(uri2.getScheme())) || !(uri1.getPort().equals(uri2.getPort()))) {
+            // scheme OR port mismatch
+            return false;
+        }
+        InetSocketAddress socketAddr1 = getSocketAddr(uri1);
+        InetSocketAddress socketAddr2 = getSocketAddr(uri2);
+        if (socketAddr1 == null || socketAddr2 == null) {
+            // at least one uri seems to not target a real socket address.
+            return false;
+        }
+        return socketAddr1.equals(socketAddr2);
     }
 }

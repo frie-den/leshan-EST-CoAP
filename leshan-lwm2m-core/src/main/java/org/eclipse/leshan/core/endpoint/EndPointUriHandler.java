@@ -35,5 +35,12 @@ public interface EndPointUriHandler {
 
     InetSocketAddress getSocketAddr(EndpointUri uri);
 
+    /**
+     * Compare 2 URI by addresses.
+     * <p>
+     * This can be needed when one URI could be based on domain name and the other based on IP.
+     */
+    boolean isUriTargetSameSocket(EndpointUri uri1, EndpointUri uri2);
+
     void validateURI(EndpointUri uri) throws InvalidEndpointUriException;
 }

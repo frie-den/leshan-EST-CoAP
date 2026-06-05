@@ -56,15 +56,26 @@ public abstract class BaseCertificateVerifier implements X509CertificateVerifier
 
     protected void validateSubject(InetSocketAddress peerSocket, X509Certificate receivedServerCertificate)
             throws CertificateException {
+        if (!isSocketTargetHostname(peerSocket)) {
+            // https://www.openmobilealliance.org/release/LightweightM2M/V1_1_1-20190617-A/HTML-Version/OMA-TS-LightweightM2M_Transport-V1_1_1-20190617-A.html#5-2-8-4-0-5284-Deployments-without-DNS
+            throw new CertificateException("When trying to connect with an IP address SNI MUST be used");
+        }
 
-        if (X509CertUtil.matchSubjectDnsName(receivedServerCertificate, peerSocket.getHostName()))
-            return;
-
-        if (X509CertUtil.matchSubjectInetAddress(receivedServerCertificate, peerSocket.getAddress()))
+        if (X509CertUtil.matchSubjectDnsName(receivedServerCertificate, peerSocket.getHostString()))
             return;
 
         throw new CertificateException(
                 "Certificate chain could not be validated - server identity does not match certificate");
+    }
+
+    private static boolean isSocketTargetHostname(InetSocketAddress target) {
+        if (target.isUnresolved()) {
+            // If we need to support unresolved InetSocketAddress, then you need to create a kind of parser maybe from
+            // DefaultEndPointUriParser ?
+            throw new IllegalStateException("InetSocketAddress should be resolved...");
+        }
+        // Tricks : if hoststring equals hostaddress than hoststring return an IP litteral not a host name.
+        return !target.getHostString().equals(target.getAddress().getHostAddress());
     }
 
     protected void validateCertificateCanBeUsedForAuthentication(X509Certificate certificate,
