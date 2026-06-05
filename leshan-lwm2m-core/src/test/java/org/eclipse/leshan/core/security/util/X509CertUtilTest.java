@@ -205,21 +205,22 @@ class X509CertUtilTest {
     @Test
     void dns_wildcard_matching_test() {
         // match
-        assertTrue(X509CertUtil.dnsNameMatch("*.eclipse.org", "server.eclipse.org"));
+        assertTrue(X509CertUtil.dnsNameMatch("*.eclipse.org", "server.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "server.eclipse.org", true));
 
         // doesn't match
-        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "server.subdomain.eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "sub.server.eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", ".eclipse.org"));
+        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "server.subdomain.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", "sub.server.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.eclipse.org", ".eclipse.org", false));
 
         // invalid matcher
-        assertFalse(X509CertUtil.dnsNameMatch("*", "eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.", "eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("s*r.eclipse.org", "server.eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*ver.eclipse.org", "server.eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("server.*.org", "server.eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.org", "eclipse.org"));
-        assertFalse(X509CertUtil.dnsNameMatch("*.*.eclipse.org", "sub.server.eclipse.org"));
+        assertFalse(X509CertUtil.dnsNameMatch("*", "eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.", "eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("s*r.eclipse.org", "server.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*ver.eclipse.org", "server.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("server.*.org", "server.eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.org", "eclipse.org", false));
+        assertFalse(X509CertUtil.dnsNameMatch("*.*.eclipse.org", "sub.server.eclipse.org", false));
     }
 }

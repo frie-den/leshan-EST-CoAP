@@ -395,14 +395,15 @@ public class X509CertUtil {
      *
      * @param matcher Matcher pattern
      * @param target Target DNS name to check
+     * @param noWildcard set to true to skip wildcard matching
      * @return true if matches, false otherwise
      */
-    public static boolean dnsNameMatch(String matcher, String target) {
+    public static boolean dnsNameMatch(String matcher, String target, boolean noWildcard) {
         // DNS matching is case-insensitive : https://www.rfc-editor.org/info/rfc6125/#section-6.4.1
         matcher = matcher.toLowerCase(Locale.ROOT);
         target = target.toLowerCase(Locale.ROOT);
 
-        if (matcher.startsWith("*.")) {
+        if (!noWildcard && matcher.startsWith("*.")) {
             // See wildcard matching constraint :
             // https://www.rfc-editor.org/info/rfc6125/#section-6.4.3
             // https://www.rfc-editor.org/info/rfc6125/#section-7.2
@@ -443,7 +444,7 @@ public class X509CertUtil {
                     int generalName = (Integer) san.get(0);
                     if (generalName == GeneralName.DNS_NAME.value) {
                         String value = (String) san.get(1);
-                        if (dnsNameMatch(value, dnsName)) {
+                        if (dnsNameMatch(value, dnsName, false /* wildcard allowed */)) {
                             return true;
                         }
                     }
@@ -457,7 +458,8 @@ public class X509CertUtil {
             // If subject alternative names are not present fallback to old ways at looking in Subject DN
             String cn = getPrincipalField(certificate.getSubjectX500Principal(), "CN");
 
-            if (dnsNameMatch(cn, dnsName)) {
+            if (dnsNameMatch(cn, dnsName, true/* no wildcard matching */)) {
+                // no wildcard matching, see : https://www.rfc-editor.org/info/rfc7252/#section-9.1.3.3
                 return true;
             }
         } catch (CertificateParsingException e) {
