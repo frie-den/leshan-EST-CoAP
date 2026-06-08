@@ -40,7 +40,6 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.security.PrivateKey;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -65,7 +64,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(BeforeEachParameterizedResolver.class)
-public class X509Test {
+class X509Test {
 
     /*---------------------------------/
     *  Parameterized Tests
@@ -92,13 +91,13 @@ public class X509Test {
     LeshanTestClient client;
 
     @BeforeEach
-    public void start(Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider) {
+    void start(Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider) {
         givenServer = givenServerUsing(givenProtocol).with(givenServerEndpointProvider);
         givenClient = givenClientUsing(givenProtocol).with(givenClientEndpointProvider);
     }
 
     @AfterEach
-    public void stop() throws InterruptedException {
+    void stop() {
         if (client != null)
             client.destroy(false);
         if (server != null)
@@ -113,9 +112,9 @@ public class X509Test {
      *  Tests
      * -------------------------------*/
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_to_server_with_x509cert_then_remove_security_info(
-            Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+    void registered_device_with_x509cert_to_server_with_x509cert_then_remove_security_info(Protocol givenProtocol,
+            String givenClientEndpointProvider, String givenServerEndpointProvider)
+            throws NonUniqueSecurityInfoException, InterruptedException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -161,9 +160,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_x509cert_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -197,9 +196,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_to_server_with_x509cert_without_endpointname(Protocol givenProtocol,
+    void registered_device_with_x509cert_to_server_with_x509cert_without_endpointname(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -234,9 +233,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_to_server_with_self_signed_x509cert(Protocol givenProtocol,
+    void registered_device_with_x509cert_to_server_with_self_signed_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         // Create X509 server & start it
         server = givenServer //
                 .actingAsServerOnly()//
@@ -269,9 +268,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_and_bad_endpoint_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_x509cert_and_bad_endpoint_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -297,9 +296,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_and_bad_cn_certificate_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_x509cert_and_bad_cn_certificate_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         // Create X509 server & start it
         server = givenServer //
                 .actingAsServerOnly()//
@@ -325,9 +324,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_and_bad_private_key_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_x509cert_and_bad_private_key_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -355,9 +354,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_untrusted_x509cert_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_untrusted_x509cert_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
 
         // Create X509 server & start it
         server = givenServer //
@@ -383,9 +382,9 @@ public class X509Test {
     }
 
     @TestAllTransportLayer
-    public void registered_device_with_selfsigned_x509cert_to_server_with_x509cert(Protocol givenProtocol,
+    void registered_device_with_selfsigned_x509cert_to_server_with_x509cert(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         // Create X509 server & start it
         server = givenServer //
                 .actingAsServerOnly()//
@@ -425,9 +424,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_ca_constraint_with_direct_trust(Protocol givenProtocol,
+    void registered_device_with_x509cert_using_ca_constraint_with_direct_trust(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -459,9 +458,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_intermediate_ca_as_ca_contraint(Protocol givenProtocol,
+    void registered_device_with_x509cert_with_intermediate_ca_as_ca_contraint(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
 
         server = givenServer //
                 .actingAsServerOnly()//
@@ -499,9 +498,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_ca_constraint_like_trust_anchor(Protocol givenProtocol,
+    void registered_device_with_x509cert_using_ca_constraint_like_trust_anchor(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -539,9 +538,9 @@ public class X509Test {
      *
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_root_as_ca_contraint(Protocol givenProtocol,
+    void registered_device_with_x509cert_with_root_as_ca_contraint(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -578,9 +577,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_server_self_signed_certificate_as_ca_contraint_which_is_not_in_certhchain(
+    void registered_device_with_x509cert_with_server_self_signed_certificate_as_ca_contraint_which_is_not_in_certhchain(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -612,9 +611,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_server_self_signed_certificate_as_ca_contraint(
-            Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+    void registered_device_with_x509cert_with_server_self_signed_certificate_as_ca_contraint(Protocol givenProtocol,
+            String givenClientEndpointProvider, String givenServerEndpointProvider)
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertSelfSigned)//
@@ -648,9 +647,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_service_certificate_constraint(Protocol givenProtocol,
+    void registered_device_with_x509cert_using_service_certificate_constraint(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -688,9 +687,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_root_ca_as_service_certificate_constraint(Protocol givenProtocol,
+    void registered_device_with_x509cert_using_root_ca_as_service_certificate_constraint(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -722,9 +721,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_another_certificate_as_service_certificate_constraint(
+    void registered_device_with_x509cert_using_another_certificate_as_service_certificate_constraint(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -756,9 +755,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_server_self_signed_cert_as_service_certificate_constraint_which_is_not_in_certhchain(
+    void registered_device_with_x509cert_using_server_self_signed_cert_as_service_certificate_constraint_which_is_not_in_certhchain(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -790,9 +789,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_server_self_signed_cert_as_service_certificate_constraint(
+    void registered_device_with_x509cert_using_server_self_signed_cert_as_service_certificate_constraint(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertSelfSigned)//
@@ -824,9 +823,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_service_certificate_constraint_with_missing_intermediate_certificate_in_chain(
+    void registered_device_with_x509cert_using_service_certificate_constraint_with_missing_intermediate_certificate_in_chain(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa[0])//
@@ -862,9 +861,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_trust_anchor_assertion_with_direct_trust(Protocol givenProtocol,
+    void registered_device_with_x509cert_using_trust_anchor_assertion_with_direct_trust(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -896,9 +895,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_intermediate_cert_as_trust_anchor_assertion(Protocol givenProtocol,
+    void registered_device_with_x509cert_with_intermediate_cert_as_trust_anchor_assertion(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -935,9 +934,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_root_ca_cert_as_trust_anchor_assertion(Protocol givenProtocol,
+    void registered_device_with_x509cert_with_root_ca_cert_as_trust_anchor_assertion(Protocol givenProtocol,
             String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -974,9 +973,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_trust_anchor_assertion_which_is_not_in_certchain(
-            Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+    void registered_device_with_x509cert_with_trust_anchor_assertion_which_is_not_in_certchain(Protocol givenProtocol,
+            String givenClientEndpointProvider, String givenServerEndpointProvider)
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1008,9 +1007,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_server_self_signed__cert_as_trust_anchor_assertion(
-            Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+    void registered_device_with_x509cert_with_server_self_signed__cert_as_trust_anchor_assertion(Protocol givenProtocol,
+            String givenClientEndpointProvider, String givenServerEndpointProvider)
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1042,9 +1041,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_direct_trust_with_self_signed_certificate_as_trust_anchor_assertion(
+    void registered_device_with_x509cert_using_direct_trust_with_self_signed_certificate_as_trust_anchor_assertion(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertSelfSigned)//
@@ -1076,9 +1075,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_direct_trust_with_certificate_signed_by_ca_as_trust_anchor_assertion(
+    void registered_device_with_x509cert_using_direct_trust_with_certificate_signed_by_ca_as_trust_anchor_assertion(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa[0])//
@@ -1112,9 +1111,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_with_server_certificate_signed_by_ca_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_with_server_certificate_signed_by_ca_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1151,9 +1150,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_no_end_entity_certificate_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_using_no_end_entity_certificate_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1185,9 +1184,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_another_end_entity_certificate_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_using_another_end_entity_certificate_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1219,9 +1218,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_unexpected_self_signed_certificate_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_using_unexpected_self_signed_certificate_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException {
+            throws NonUniqueSecurityInfoException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa)//
@@ -1253,9 +1252,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_expected_self_signed_certificate_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_using_expected_self_signed_certificate_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertSelfSigned)//
@@ -1292,9 +1291,9 @@ public class X509Test {
      * </pre>
      */
     @TestAllTransportLayer
-    public void registered_device_with_x509cert_using_server_certificate_signed_by_ca_as_domain_issuer_certificate(
+    void registered_device_with_x509cert_using_server_certificate_signed_by_ca_as_domain_issuer_certificate(
             Protocol givenProtocol, String givenClientEndpointProvider, String givenServerEndpointProvider)
-            throws NonUniqueSecurityInfoException, CertificateEncodingException, InterruptedException {
+            throws NonUniqueSecurityInfoException, InterruptedException {
         server = givenServer //
                 .actingAsServerOnly()//
                 .using(serverPrivateKeyFromCert, serverX509CertChainWithIntermediateCa[0])//
