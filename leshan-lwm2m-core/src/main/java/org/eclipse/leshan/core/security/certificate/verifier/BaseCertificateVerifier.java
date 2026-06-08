@@ -20,6 +20,7 @@ import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Locale;
 
 import org.eclipse.leshan.core.security.certificate.util.X509CertUtil;
 
@@ -29,7 +30,7 @@ public abstract class BaseCertificateVerifier implements X509CertificateVerifier
      * Ensure that chain is not empty
      */
     protected void validateCertificateChainNotEmpty(CertPath certChain) throws CertificateException {
-        if (certChain.getCertificates().size() == 0) {
+        if (certChain.getCertificates().isEmpty()) {
             throw new CertificateException("Certificate chain could not be validated : server cert chain is empty");
         }
     }
@@ -78,17 +79,23 @@ public abstract class BaseCertificateVerifier implements X509CertificateVerifier
         return !target.getHostString().equals(target.getAddress().getHostAddress());
     }
 
-    protected void validateCertificateCanBeUsedForAuthentication(X509Certificate certificate,
-            Role certificateOwnerRole) {
+    protected void validateCertificateCanBeUsedForAuthentication(X509Certificate certificate, Role certificateOwnerRole)
+            throws CertificateException {
+        boolean valid;
         switch (certificateOwnerRole) {
         case CLIENT:
-            X509CertUtil.canBeUsedForAuthentication(certificate, true);
+            valid = X509CertUtil.canBeUsedForAuthentication(certificate, true);
             break;
         case SERVER:
-            X509CertUtil.canBeUsedForAuthentication(certificate, false);
+            valid = X509CertUtil.canBeUsedForAuthentication(certificate, false);
             break;
         default:
             throw new IllegalStateException("Unsupported role " + certificateOwnerRole);
+        }
+        if (!valid) {
+            throw new CertificateException(String.format(
+                    "Certificate chain could not be validated - certificate is not allowed for %s authentication",
+                    certificateOwnerRole.name().toLowerCase(Locale.ROOT)));
         }
     }
 }
