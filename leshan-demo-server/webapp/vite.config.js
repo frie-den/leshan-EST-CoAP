@@ -69,6 +69,10 @@ export default defineConfig({
   ],
   build: {
     outDir: outputDir,
+    rolldownOptions: {
+      // Shared sources live outside webapp/; suppress false-positive PREFER_BUILTIN_FEATURE.
+      checks: { preferBuiltinFeature: false },
+    },
   },
   preview: {
     port: 8088,
