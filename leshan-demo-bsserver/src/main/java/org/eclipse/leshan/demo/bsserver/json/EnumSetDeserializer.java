@@ -50,17 +50,15 @@ public class EnumSetDeserializer extends JsonDeserializer<EnumSet<?>> implements
 
     private com.fasterxml.jackson.databind.deser.std.EnumSetDeserializer buildDefaultEnumSetDeserializer(
             DeserializationContext ctxt) {
+
         JavaType contextualType = ctxt.getContextualType();
         JavaType contentType = contextualType.getContentType();
         DeserializationConfig config = ctxt.getConfig();
 
-        // Use 3-arg constructor: (JavaType, JsonDeserializer<?>, TypeDeserializer)
-        // Pass null for valueTypeDeser since enums don't need polymorphic type handling
-        return new com.fasterxml.jackson.databind.deser.std.EnumSetDeserializer(contentType,
-                new EnumDeserializer(buildDefaultEnumResolver(ctxt),
-                        config.isEnabled(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS), null, // byEnumNamingResolver
-                        null), // toStringResolver
-                null); // valueTypeDeser
+        JsonDeserializer<?> enumDeser = new EnumDeserializer(buildDefaultEnumResolver(ctxt),
+                config.isEnabled(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS), null, null);
+
+        return new com.fasterxml.jackson.databind.deser.std.EnumSetDeserializer(contentType, enumDeser);
     }
 
     protected EnumResolver buildDefaultEnumResolver(DeserializationContext ctxt) {

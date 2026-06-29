@@ -56,7 +56,7 @@ public class BootstrapServlet extends LeshanDemoServlet {
         this.bsStore = bsStore;
 
         mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         SimpleModule module = new SimpleModule();
         module.addDeserializer(EnumSet.class, new EnumSetDeserializer());

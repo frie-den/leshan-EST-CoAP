@@ -135,7 +135,7 @@ public class ClientServlet extends LeshanDemoServlet {
         this.eventServlet = servlet;
 
         mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         SimpleModule module = new SimpleModule();
         module.addSerializer(Link.class, new JacksonLinkSerializer());
         module.addSerializer(Registration.class, new JacksonRegistrationSerializer(server.getPresenceService()));

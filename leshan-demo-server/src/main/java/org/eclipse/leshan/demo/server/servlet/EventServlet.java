@@ -294,7 +294,7 @@ public class EventServlet extends EventSourceServlet {
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        objectMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         SimpleModule module = new SimpleModule();
         module.addSerializer(Link.class, new JacksonLinkSerializer());
         module.addSerializer(Registration.class, new JacksonRegistrationSerializer(server.getPresenceService()));

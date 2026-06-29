@@ -81,7 +81,7 @@ public class SecurityServlet extends LeshanDemoServlet {
         publicKeySerDes = new PublicKeySerDes();
 
         this.mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         SimpleModule module = new SimpleModule();
         module.addDeserializer(SecurityInfo.class, new JacksonSecurityDeserializer());
         module.addSerializer(SecurityInfo.class, new JacksonSecuritySerializer());
